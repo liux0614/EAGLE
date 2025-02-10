@@ -14,7 +14,7 @@ Efficient Approach for Guided Local Examination in Digital Pathology
 
 If you find our work useful in your research or if you use parts of this code please consider citing our [preprint](https://arxiv.org/abs/xxx):
 
-Neidlinger, P. et al. Realising CHIEF's Promise: EAGLE Enhances WSI Classification Through Efficient Tile Selection, _Arxiv_, 2025
+Neidlinger, P. et al. A deep learning framework for efficient pathology image analysis, _Arxiv_, 2025
 
 ```bibtex
 @misc{neidlinger2025eagle,
