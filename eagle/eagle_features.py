@@ -6,9 +6,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import torch.nn.functional as F
-
-# Add local CHIEF module path
-sys.path.append(os.path.join("models", "CHIEF"))
 from models.CHIEF import CHIEF
 
 # Use CUDA if available
@@ -16,7 +13,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load CHIEF model and weights from relative paths
 model = CHIEF(size_arg="small", dropout=True, n_classes=2)
-weight_path = os.path.join("models", "CHIEF", "model_weight", "CHIEF_pretraining.pth")
+weight_path = os.path.join("models", "weights", "CHIEF_pretraining.pth")
 td = torch.load(weight_path, map_location=device)
 if 'organ_embedding' in td:
     del td['organ_embedding']
@@ -45,9 +42,6 @@ def get_base_feature_dir_for_embeddings(folder):
     else:
         return os.path.join("tile_features","2mpp")
 
-# Base directory for CHIEF attention (always from 5mag_experiments)
-chief_attention_dir = os.path.join("tile_features","2mpp")
-
 # Helper to load tile features for a given feature modality from HDF5 files
 def load_fm_features(fm_path, slide_table, device):
     fm_feats_list = []
@@ -72,7 +66,7 @@ def get_topk_tiles(features, attention_raw, k, patient_id):
     selected_feats = features[top_k_indices.squeeze()]
     return selected_feats, top_k_values.squeeze()
 
-model_dir = os.path.join("features")
+slide_emb_dir = os.path.join("output","features")
 
 # Helper to determine the feature modality path for a given folder, fm, and cohort.
 def get_fm_path(folder, fm, cohort):
@@ -150,7 +144,7 @@ for folder in tqdm(folders, desc="Processing Folders"):
         # Skip processing if output for all models already exists.
         already_done_for_this_cohort = True
         for m_check in models:
-            out_file_check = os.path.join(model_dir, f"{folder}/{m_check}".lower(), f"{cohort}.h5")
+            out_file_check = os.path.join(slide_emb_dir, f"{folder}/{m_check}".lower(), f"{cohort}.h5")
             if not os.path.exists(out_file_check):
                 print(f"{out_file_check} doesn't exist yet")
                 already_done_for_this_cohort = False
@@ -197,7 +191,7 @@ for folder in tqdm(folders, desc="Processing Folders"):
         # For each model in the mapping, produce and save embeddings.
         for m in models:
             combined_model_name = f"{folder}/{m}".lower()
-            output_base = os.path.join(model_dir, combined_model_name)
+            output_base = os.path.join(slide_emb_dir, combined_model_name)
             os.makedirs(output_base, exist_ok=True)
 
             if folder in ['halfmpp', 'kathermpp', '2mpp'] and m in ['chief', 'eagle']:
