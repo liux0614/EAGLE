@@ -13,13 +13,10 @@ from tqdm import tqdm
 from pathlib import Path
 from PIL import Image, ImageDraw
 import svgwrite
+from models.CHIEF import CHIEF
 
 # Allow large image processing
 Image.MAX_IMAGE_PIXELS = None
-
-# Add the local path to the CHIEF module
-sys.path.append(os.path.join("modules", "CHIEF"))
-from models.CHIEF import CHIEF
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Generate top tiles visualization for patients.')
@@ -32,7 +29,7 @@ def parse_args():
 def load_chief_model(device):
     """Load the pretrained CHIEF model."""
     model = CHIEF(size_arg="small", dropout=True, n_classes=2)
-    weight_path = os.path.join("models", "CHIEF", "model_weight", "CHIEF_pretraining.pth")
+    weight_path = os.path.join("models", "weights", "CHIEF_pretraining.pth")
     td = torch.load(weight_path, map_location=torch.device(device))
     if 'organ_embedding' in td:
         del td['organ_embedding']
@@ -293,13 +290,13 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
 
 def main(cohorts=None, patient_ids=None, num_patients=None, device='cpu'):
     """Main routine for processing patients and generating visualizations."""
-    cache_sup_dir = os.path.join("cache", "experiments")
+    cache_sup_dir = os.path.join("cache", "images")
     if cohorts is None:
         cohorts = os.listdir(cache_sup_dir)
     for cohort in cohorts:
-        ctp_dir = os.path.join("features", cohort, "ctranspath", "STAMP_raw")
-        cache_dir = os.path.join("cache", "experiments", cohort)
-        output_dir = os.path.join("output", "slide_search", f"{cohort}_A")
+        ctp_dir = os.path.join("tile_features", "2mpp", cohort, "ctranspath", "STAMP_raw_xiyuewang-ctranspath-7c998680")
+        cache_dir = os.path.join("cache", "images", cohort)
+        output_dir = os.path.join("output", "toptiles", f"{cohort}_A")
         os.makedirs(output_dir, exist_ok=True)
 
         model = load_chief_model(device)
