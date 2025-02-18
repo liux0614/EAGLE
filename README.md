@@ -10,6 +10,14 @@ Efficient Approach for Guided Local Examination in Digital Pathology
     <img src="assets/fig1v2hd.png" alt="failed loading the image" width="1100"/>
 </p>
 
+## Acknowledgements
+
+We thank the authors and developers for their contribution as below.
+
+    - [STAMP](https://github.com/KatherLab/STAMP)
+    - [CHIEF](https://github.com/hms-dbmi/CHIEF)
+    - [Virchow2](https://huggingface.co/paige-ai/Virchow2)
+
 ## Citation
 
 If you find our work useful in your research or if you use parts of this code please consider citing our [preprint](https://arxiv.org/abs/xxx):
