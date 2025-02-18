@@ -42,7 +42,7 @@ def load_features_and_cohorts(model_name):
     """
     mpp_type = get_mpp_type(model_name)
     # Use relative paths instead of fixed file paths
-    features_dir = os.path.join('features', mpp_type, model_name.lower())
+    features_dir = os.path.join('output','features', mpp_type, model_name.lower())
     clinical_dir = os.path.join('tables', 'clinical_tables')
     
     h5_files = glob(os.path.join(features_dir, '*.h5'))
@@ -244,4 +244,4 @@ def plot_umaps_for_models(models, output_dir="figures"):
 
 if __name__ == "__main__":
     all_models = ["eagle", "titan", "cobra", "prism", "chief", "madeleine", "gigapath"]
-    plot_umaps_for_models(all_models, output_dir=os.path.join("figures"))
+    plot_umaps_for_models(all_models, output_dir=os.path.join("output","umaps"))
