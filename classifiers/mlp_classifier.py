@@ -265,10 +265,10 @@ folder_model_mapping = {
 folders = list(folder_model_mapping.keys())
 
 for folder in tqdm(folders, desc="Processing Folders"):
-    feature_dir = os.path.join('features', folder)
+    feature_dir = os.path.join('output','features', folder)
     table_dir = os.path.join('tables', 'clinical_tables')
     external_table_dir = os.path.join('tables', 'clinical_tables')
-    model_dir = os.path.join('models')
+    model_dir = os.path.join('output','models')
     models = folder_model_mapping[folder]
 
     for model in models:
