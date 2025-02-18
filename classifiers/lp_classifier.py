@@ -199,12 +199,12 @@ external_task_mapping = {
     }
 }
 
-moco_features_dir = os.path.join('features', 'eagle')
+moco_features_dir = os.path.join('output', 'features', 'eagle')
 folders = ['2mpp', 'halfmpp', 'kathermpp']
 
 for folder in folders:
     folder_dir = os.path.join(moco_features_dir, folder)
     for model in os.listdir(folder_dir):
         feature_dir = os.path.join(folder_dir, model)
-        model_dir = os.path.join('models', 'lp_models', folder)
+        model_dir = os.path.join('output', 'lp_models', folder)
         run_logistic_regression_benchmark(feature_dir, table_dir, model_dir, cohorts, tasks, external_task_mapping, model)
