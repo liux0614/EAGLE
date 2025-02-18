@@ -8,8 +8,8 @@ from tqdm import tqdm
 
 # Configuration
 clinical_tables_path = os.path.join("tables", "clinical_tables_filtered")
-embeddings_path = os.path.join("features", "2mpp", "eagle")
-output_dir = os.path.join("results", "slide_search")
+embeddings_path = os.path.join("output","features", "2mpp", "eagle")
+output_dir = os.path.join("output", "slide_search")
 excluded_cohorts = {'tcga_luad', 'cptac_luad'}
 random_seed = 42
 num_random_patients = 5
