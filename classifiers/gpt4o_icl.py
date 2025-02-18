@@ -17,11 +17,11 @@ import openpyxl
 # os.environ["OPENAI_API_KEY"] = "your-api-key-here"
 
 # Relative data paths
-DATA_PATH = os.path.join("data")
+DATA_PATH = os.path.join("icl","data")
 CSV_PATH = os.path.join(DATA_PATH, "knowledge_table.csv")
 ORIGINAL_IMAGES_PATH = os.path.join(DATA_PATH, "original")
 TOPTILES_IMAGES_PATH = os.path.join(DATA_PATH, "toptiles")
-RESULTS_PATH = os.path.join("results")
+RESULTS_PATH = os.path.join("icl","results")
 os.makedirs(RESULTS_PATH, exist_ok=True)
 
 # Load input data from CSV
@@ -202,7 +202,7 @@ def run_model(messages, model=MODEL_NAME, max_tokens=1000, temperature=0.7):
 
 def setup_logging():
     """Configure logging to file and console."""
-    log_dir = "logs"
+    log_dir = os.path.join("icl","logs")
     os.makedirs(log_dir, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = os.path.join(log_dir, f"{MODEL_NAME}_{timestamp}.log")
