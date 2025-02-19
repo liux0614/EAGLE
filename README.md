@@ -4,11 +4,51 @@ Efficient Approach for Guided Local Examination in Digital Pathology
 [Preprint](https://arxiv.org/abs/xxx) | [Cite](#citation)
 
 ## Abstract
->Artificial intelligence has transformed digital pathology by enabling biomarker prediction from high-resolution whole slide images (WSIs). However, current methods are computationally intensive, processing thousands of redundant tiles per WSI and requiring complex aggregator models. We introduce EAGLE (Efficient Approach for Guided Local Examination), a framework that emulates pathologists by selectively analysing informative regions. EAGLE incorporates two state-of-the-art foundation models: CHIEF for efficient tile selection and Virchow2 for extracting high-quality features from these tiles. Benchmarking was conducted against leading slide- and tile-level foundation models across 31 tasks from four cancer types, spanning morphology, biomarker prediction and prognosis. Achieving an average AUROC of 0.742, EAGLE matches the best slide encoder TITAN at 0.740 and surpasses the best tile-level model Virchow2 at 0.723. In biomarker prediction tasks, it reaches an AUROC of 0.772 compared to TITAN's 0.763 and Virchow2's 0.744. EAGLE processes a slide in 2.27 seconds, requiring only 1.1% of time compared to TITAN’s tile encoder. This computational advantage facilitates real-time workflows, and enables pathologists to easily validate all tiles which are used by the model during analysis. By reliably identifying meaningful regions and minimizing artifacts, EAGLE provides robust and interpretable outputs, supporting rapid slide searches, integration into multi-omic pipelines and emerging clinical foundation models.
+>Artificial intelligence (AI) has transformed digital pathology by enabling biomarker prediction from high-resolution whole slide images (WSIs). However, current methods are computation-ally inefficient, processing thousands of redundant tiles per WSI and requiring complex ag-gregator models. We introduce EAGLE (Efficient Approach for Guided Local Examination), a deep learning framework that emulates pathologists by selectively analyzing informative re-gions. EAGLE incorporates two foundation models: CHIEF for efficient tile selection and Vir-chow2 for extracting high-quality features. Benchmarking was conducted against leading slide- and tile-level foundation models across 31 tasks from four cancer types, spanning morphology, biomarker prediction and prognosis. EAGLE outperformed state-of-the-art foun-dation models by up to 23% and achieved the highest AUROC overall. It processed a slide in 2.27 seconds, reducing computational time by more than 99% compared to existing models. This efficiency enables real-time workflows, allows pathologists to validate all tiles which are used by the model during analysis, and eliminates dependence on high-performance compu-ting, making AI-powered pathology more accessible. By reliably identifying meaningful regions and minimizing artifacts, EAGLE provides robust and interpretable outputs, supporting rapid slide searches, integration into multi-omics pipelines and emerging clinical foundation models.
+
 
 <p align="center">
     <img src="assets/fig1v2hd.png" alt="failed loading the image" width="1100"/>
 </p>
+
+## EAGLE Feature Extraction
+
+Before extracting EAGLE slide embeddings, please ensure you have completed the following steps:
+
+1. **Extract CTransPath Features at 2 MPP**  
+   Use the [STAMP-Benchmark](https://github.com/KatherLab/STAMP-Benchmark) with the following configuration:
+   - **Cache Images:** Store in `cache/images`
+   - **Tile Features:** Store in `tile_features/2mpp`
+   - **Microns:** Set to `448` (with a pixel size of `224`, this results in a 2 MPP magnification)
+   - **Normalization:** `false`
+   - **Feature Extractor:** `ctp`
+   - **Cache:** `true`
+   - **Only Feature Extraction:** `false`
+
+2. **Virchow2 Access**  
+   - Request access via [Virchow2 on Hugging Face](https://huggingface.co/paige-ai/Virchow2).  
+   - Once approved, add your access token to your environment.
+
+3. **CHIEF Model Weights**  
+   - Download the CHIEF model weights from the [CHIEF repository](https://github.com/hms-dbmi/CHIEF).  
+   - Save the weights to: `models/weights/CHIEF_pretraining.pth`
+
+4. **Prepare the Slide Table**  
+   Create a CSV slide table mapping tile features to patient IDs (to account for multiple slides per patient). The CSV must contain the following columns:
+   - `PATIENT`: Patient IDs  
+   - `FILENAME`: Corresponding `.h5` filename from `tile_features/2mpp`
+
+You can extract the EAGLE slide embeddings using the main extraction script:
+
+```bash
+python main_feature_extraction.py
+```
+
+or if you want to inspect the selected toptiles:
+
+```bash
+python main_feature_extraction.py --visualize
+```
 
 ## Acknowledgements
 
