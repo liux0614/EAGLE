@@ -60,7 +60,7 @@ We thank the authors and developers for their contribution as below.
 
 ## Citation
 
-If you find our work useful in your research or if you use parts of this code please consider citing our [preprint](https://arxiv.org/abs/xxx):
+If you find our work useful in your research or if you use parts of this code please consider citing our [preprint](https://arxiv.org/abs/2502.13027):
 
 Neidlinger, P. et al. A deep learning framework for efficient pathology image analysis, _Arxiv_, 2025
 
