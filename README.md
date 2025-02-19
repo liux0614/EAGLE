@@ -1,7 +1,7 @@
 # EAGLE
 Efficient Approach for Guided Local Examination in Digital Pathology
 
-[Preprint](https://arxiv.org/abs/xxx) | [Cite](#citation)
+[Preprint](https://arxiv.org/abs/2502.13027) | [Cite](#citation)
 
 ## Abstract
 >Artificial intelligence (AI) has transformed digital pathology by enabling biomarker prediction from high-resolution whole slide images (WSIs). However, current methods are computation-ally inefficient, processing thousands of redundant tiles per WSI and requiring complex ag-gregator models. We introduce EAGLE (Efficient Approach for Guided Local Examination), a deep learning framework that emulates pathologists by selectively analyzing informative re-gions. EAGLE incorporates two foundation models: CHIEF for efficient tile selection and Vir-chow2 for extracting high-quality features. Benchmarking was conducted against leading slide- and tile-level foundation models across 31 tasks from four cancer types, spanning morphology, biomarker prediction and prognosis. EAGLE outperformed state-of-the-art foun-dation models by up to 23% and achieved the highest AUROC overall. It processed a slide in 2.27 seconds, reducing computational time by more than 99% compared to existing models. This efficiency enables real-time workflows, allows pathologists to validate all tiles which are used by the model during analysis, and eliminates dependence on high-performance compu-ting, making AI-powered pathology more accessible. By reliably identifying meaningful regions and minimizing artifacts, EAGLE provides robust and interpretable outputs, supporting rapid slide searches, integration into multi-omics pipelines and emerging clinical foundation models.
@@ -65,13 +65,13 @@ If you find our work useful in your research or if you use parts of this code pl
 Neidlinger, P. et al. A deep learning framework for efficient pathology image analysis, _Arxiv_, 2025
 
 ```bibtex
-@misc{neidlinger2025eagle,
+@misc{neidlinger2025deeplearningframeworkefficient,
       title={A deep learning framework for efficient pathology image analysis}, 
       author={Peter Neidlinger and Tim Lenz and Sebastian Foersch and Chiara M. L. Loeffler and Jan Clusmann and Marco Gustav and Lawrence A. Shaktah and Rupert Langer and Bastian Dislich and Lisa A. Boardman and Amy J. French and Ellen L. Goode and Andrea Gsur and Stefanie Brezina and Marc J. Gunter and Robert Steinfelder and Hans-Michael Behrens and Christoph Röcken and Tabitha Harrison and Ulrike Peters and Amanda I. Phipps and Giuseppe Curigliano and Nicola Fusco and Antonio Marra and Michael Hoffmeister and Hermann Brenner and Jakob Nikolas Kather},
       year={2025},
-      eprint={xxx},
+      eprint={2502.13027},
       archivePrefix={arXiv},
       primaryClass={cs.CV},
-      url={https://arxiv.org/abs/xxx}, 
+      url={https://arxiv.org/abs/2502.13027}, 
 }
 ```
