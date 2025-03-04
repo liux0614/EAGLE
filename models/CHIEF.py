@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
+
 
 def initialize_weights(module):
     for m in module.modules():
@@ -13,8 +13,9 @@ def initialize_weights(module):
             nn.init.constant_(m.weight, 1)
             nn.init.constant_(m.bias, 0)
 
+
 class Att_Head(nn.Module):
-    def __init__(self,FEATURE_DIM,ATT_IM_DIM):
+    def __init__(self, FEATURE_DIM, ATT_IM_DIM):
         super(Att_Head, self).__init__()
 
         self.fc1 = nn.Linear(FEATURE_DIM, ATT_IM_DIM)
@@ -28,13 +29,13 @@ class Att_Head(nn.Module):
         x = self.fc2(x)
         x = self.sigmoid(x)
         return x
+
+
 class Attn_Net(nn.Module):
 
     def __init__(self, L=1024, D=256, dropout=False, n_classes=1):
         super(Attn_Net, self).__init__()
-        self.module = [
-            nn.Linear(L, D),
-            nn.Tanh()]
+        self.module = [nn.Linear(L, D), nn.Tanh()]
 
         if dropout:
             self.module.append(nn.Dropout(0.25))
@@ -45,15 +46,14 @@ class Attn_Net(nn.Module):
 
     def forward(self, x):
         return self.module(x), x  # N x 1, N * D
+
+
 class Attn_Net_Gated(nn.Module):
     def __init__(self, L=1024, D=256, dropout=False, n_classes=1):
         super(Attn_Net_Gated, self).__init__()
-        self.attention_a = [
-            nn.Linear(L, D),
-            nn.Tanh()]
+        self.attention_a = [nn.Linear(L, D), nn.Tanh()]
 
-        self.attention_b = [nn.Linear(L, D),
-                            nn.Sigmoid()]
+        self.attention_b = [nn.Linear(L, D), nn.Sigmoid()]
         if dropout:
             self.attention_a.append(nn.Dropout(0.25))
             self.attention_b.append(nn.Dropout(0.25))
@@ -70,31 +70,52 @@ class Attn_Net_Gated(nn.Module):
         A = self.attention_c(A)
         return A, x
 
+
 class CHIEF(nn.Module):
-    def __init__(self, gate=True, size_arg="large", dropout=True, n_classes=2,
-                 instance_loss_fn=nn.CrossEntropyLoss(),**kwargs):
+    def __init__(
+        self,
+        gate=True,
+        size_arg="large",
+        dropout=True,
+        n_classes=2,
+        instance_loss_fn=nn.CrossEntropyLoss(),
+        **kwargs
+    ):
         super(CHIEF, self).__init__()
-        self.size_dict = {'xs': [384, 256, 256], "small": [768, 512, 256], "big": [1024, 512, 384], 'large': [2048, 1024, 512]}
+        self.size_dict = {
+            "xs": [384, 256, 256],
+            "small": [768, 512, 256],
+            "big": [1024, 512, 384],
+            "large": [2048, 1024, 512],
+        }
         size = self.size_dict[size_arg]
         print(size)
         fc = [nn.Linear(size[0], size[1]), nn.ReLU()]
         if dropout:
             fc.append(nn.Dropout(0.25))
         if gate:
-            attention_net = Attn_Net_Gated(L=size[1], D=size[2], dropout=dropout, n_classes=1)
+            attention_net = Attn_Net_Gated(
+                L=size[1], D=size[2], dropout=dropout, n_classes=1
+            )
         else:
-            attention_net = Attn_Net(L=size[1], D=size[2], dropout=dropout, n_classes=1)
+            attention_net = Attn_Net(
+                L=size[1], D=size[2], dropout=dropout, n_classes=1
+            )
         fc.append(attention_net)
         self.attention_net = nn.Sequential(*fc)
         self.classifiers = nn.Linear(size[1], n_classes)
-        instance_classifiers = [nn.Linear(size[1], 2) for i in range(n_classes)]
+        instance_classifiers = [
+            nn.Linear(size[1], 2) for i in range(n_classes)
+        ]
         self.instance_classifiers = nn.ModuleList(instance_classifiers)
         self.instance_loss_fn = instance_loss_fn
         self.n_classes = n_classes
         initialize_weights(self)
 
-        self.att_head = Att_Head(size[1],size[2])
-        self.text_to_vision=nn.Sequential(nn.Linear(768, size[1]), nn.ReLU(), nn.Dropout(p=0.25))
+        self.att_head = Att_Head(size[1], size[2])
+        self.text_to_vision = nn.Sequential(
+            nn.Linear(768, size[1]), nn.ReLU(), nn.Dropout(p=0.25)
+        )
 
     def relocate(self):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -113,9 +134,9 @@ class CHIEF(nn.Module):
         slide_embeddings = torch.mm(A, h_ori)
 
         result = {
-            'attention_raw': A_raw,
-            'WSI_feature': slide_embeddings,
-            'WSI_feature_transformed': WSI_feature,
-            'tile_features_transformed': h,
+            "attention_raw": A_raw,
+            "WSI_feature": slide_embeddings,
+            "WSI_feature_transformed": WSI_feature,
+            "tile_features_transformed": h,
         }
         return result
