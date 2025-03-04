@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 import random
 import base64
@@ -8,9 +7,7 @@ import numpy as np
 import pandas as pd
 import h5py
 import torch
-import torch.nn.functional as F
 from tqdm import tqdm
-from pathlib import Path
 from PIL import Image, ImageDraw
 import svgwrite
 from models.CHIEF import CHIEF
@@ -18,50 +15,68 @@ from models.CHIEF import CHIEF
 # Allow large image processing
 Image.MAX_IMAGE_PIXELS = None
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(description='Generate top tiles visualization for patients.')
-    parser.add_argument('--cohort', type=str, default='dachs', help='Cohort name.')
-    parser.add_argument('--patient_id', type=str, default=None, help='Specific patient ID to process.')
-    parser.add_argument('--num_patients', type=int, default=None, help='Number of random patients to process.')
-    parser.add_argument('--device', type=str, default='cpu', help='Device to run the model on.')
+    parser = argparse.ArgumentParser(
+        description="Generate top tiles visualization for patients."
+    )
+    parser.add_argument("--cohort", type=str, default="dachs", help="Cohort name.")
+    parser.add_argument(
+        "--patient_id", type=str, default=None, help="Specific patient ID to process."
+    )
+    parser.add_argument(
+        "--num_patients",
+        type=int,
+        default=None,
+        help="Number of random patients to process.",
+    )
+    parser.add_argument(
+        "--device", type=str, default="cpu", help="Device to run the model on."
+    )
     return parser.parse_args()
+
 
 def load_chief_model(device):
     """Load the pretrained CHIEF model."""
     model = CHIEF(size_arg="small", dropout=True, n_classes=2)
     weight_path = os.path.join("models", "weights", "CHIEF_pretraining.pth")
     td = torch.load(weight_path, map_location=torch.device(device))
-    if 'organ_embedding' in td:
-        del td['organ_embedding']
+    if "organ_embedding" in td:
+        del td["organ_embedding"]
     model.load_state_dict(td, strict=True)
     model.eval().to(device)
     return model
 
+
 def load_slide_table(cohort):
     """Load the slide table CSV for a given cohort using a relative path."""
-    slide_table_path = os.path.join("tables", "slide_tables", f"slide_table_{cohort}.csv")
+    slide_table_path = os.path.join(
+        "tables", "slide_tables", f"slide_table_{cohort}.csv"
+    )
     slide_table = pd.read_csv(slide_table_path)
     return slide_table
 
-def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, model, cohort):
+
+def process_patient(
+    patient_id, group, ctp_dir, cache_dir, output_dir, device, model, cohort
+):
     """Process a single patient: load features, perform model inference, extract top tiles and generate visualization."""
     all_ctp_feats_list = []
     all_coords_list = []
     slide_indices = []
-    thumbnails_data = []
 
     # Process each slide in the patient's group
     for _, row in group.iterrows():
-        slide_filename = row['FILENAME']
+        slide_filename = row["FILENAME"]
         slide_id = os.path.splitext(slide_filename)[0]
         h5_ctp = os.path.join(ctp_dir, slide_filename)
-        cache_image_path = os.path.join(cache_dir, slide_id, 'slide.jpg')
+        cache_image_path = os.path.join(cache_dir, slide_id, "slide.jpg")
 
         if not os.path.exists(h5_ctp) or not os.path.exists(cache_image_path):
             continue
 
         # Load features and coordinates from the h5 file
-        with h5py.File(h5_ctp, 'r') as h5:
+        with h5py.File(h5_ctp, "r") as h5:
             feats = torch.tensor(h5["feats"][:]).float()
             coords = torch.tensor(h5["coords"][:], dtype=torch.int)
 
@@ -82,7 +97,7 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
     with torch.no_grad():
         x = all_ctp_feats_cat
         result = model(x)
-        attention_raw = result['attention_raw'].cpu()
+        attention_raw = result["attention_raw"].cpu()
         num_tiles = attention_raw.size(1)
 
     # Select top k tiles based on attention scores
@@ -102,13 +117,15 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
     tile_images = []
     slide_thumbs = []  # Contains (slide_id, coords_list, original_image)
     for s_id, coords_list in tiles_by_slide.items():
-        cache_image_path = os.path.join(cache_dir, s_id, 'slide.jpg')
+        cache_image_path = os.path.join(cache_dir, s_id, "slide.jpg")
         if not os.path.exists(cache_image_path):
             continue
-        cache_image = Image.open(cache_image_path).convert('RGB').transpose(Image.TRANSPOSE)
+        cache_image = (
+            Image.open(cache_image_path).convert("RGB").transpose(Image.TRANSPOSE)
+        )
         slide_thumbs.append((s_id, coords_list, cache_image))
 
-        for (x_coord, y_coord) in coords_list:
+        for x_coord, y_coord in coords_list:
             left = x_coord
             upper = y_coord
             right = left + 224
@@ -116,7 +133,14 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
 
             w, h = cache_image.size
             # Skip if tile bounds are invalid
-            if right <= left or lower <= upper or left < 0 or upper < 0 or right > w or lower > h:
+            if (
+                right <= left
+                or lower <= upper
+                or left < 0
+                or upper < 0
+                or right > w
+                or lower > h
+            ):
                 continue
 
             tile_image = cache_image.crop((left, upper, right, lower))
@@ -134,7 +158,7 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
     grid_width = tiles_per_row * tile_size
     grid_height = grid_rows * tile_size
 
-    grid_image = Image.new('RGB', (grid_width, grid_height), 'white')
+    grid_image = Image.new("RGB", (grid_width, grid_height), "white")
     draw_grid = ImageDraw.Draw(grid_image)
     for idx, tile_image in enumerate(tile_images):
         row = idx // tiles_per_row
@@ -146,10 +170,10 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
     # Draw grid lines
     for i in range(1, tiles_per_row):
         x_line = i * tile_size
-        draw_grid.line([(x_line, 0), (x_line, grid_height)], fill='black', width=1)
+        draw_grid.line([(x_line, 0), (x_line, grid_height)], fill="black", width=1)
     for i in range(1, grid_rows):
         y_line = i * tile_size
-        draw_grid.line([(0, y_line), (grid_width, y_line)], fill='black', width=1)
+        draw_grid.line([(0, y_line), (grid_width, y_line)], fill="black", width=1)
 
     # Scale slide thumbnails to fit above the grid
     desired_thumb_height = grid_height / 2
@@ -165,8 +189,12 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
             heights.append(h)
         return sum(widths), max(heights), widths, heights
 
-    sum_w_norm, max_h_norm, widths_norm, heights_norm = orientation_stats(original_images, rotate=False)
-    sum_w_rot, max_h_rot, widths_rot, heights_rot = orientation_stats(original_images, rotate=True)
+    sum_w_norm, max_h_norm, widths_norm, heights_norm = orientation_stats(
+        original_images, rotate=False
+    )
+    sum_w_rot, max_h_rot, widths_rot, heights_rot = orientation_stats(
+        original_images, rotate=True
+    )
 
     def compute_scale(sum_w, max_h):
         if sum_w == 0 or max_h == 0:
@@ -189,7 +217,7 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
 
     scaled_thumbs = []
     scaled_slides = []
-    for (s_id, coords_list, orig_im) in slide_thumbs:
+    for s_id, coords_list, orig_im in slide_thumbs:
         w, h = orig_im.size
         if rotate_thumbs:
             rotated_im = orig_im.rotate(90, expand=True)
@@ -206,10 +234,12 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
             scaled_thumbs.append(im_scaled)
             scaled_slides.append((s_id, coords_list, (w, h), im_scaled))
 
-    final_thumb_height = min(max(im.height for im in scaled_thumbs), int(round(desired_thumb_height)))
+    final_thumb_height = min(
+        max(im.height for im in scaled_thumbs), int(round(desired_thumb_height))
+    )
     canvas_width = grid_width
     canvas_height = final_thumb_height + grid_height
-    canvas_image = Image.new('RGB', (canvas_width, canvas_height), 'white')
+    canvas_image = Image.new("RGB", (canvas_width, canvas_height), "white")
 
     # Position thumbnails on the canvas
     thumb_positions = []
@@ -220,7 +250,11 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
         thumb_positions.append((x_start, y_start))
     else:
         total_w = sum(im.width for im in scaled_thumbs)
-        spacing = (canvas_width - total_w) / (len(scaled_thumbs) + 1) if total_w < canvas_width else 0
+        spacing = (
+            (canvas_width - total_w) / (len(scaled_thumbs) + 1)
+            if total_w < canvas_width
+            else 0
+        )
         x_pos = spacing
         for im_scaled in scaled_thumbs:
             y_pos = (final_thumb_height - im_scaled.height) // 2
@@ -237,9 +271,11 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
         new_y = orig_w - x
         return new_x, new_y
 
-    for idx, (s_id, coords_list, (orig_w, orig_h), im_scaled) in enumerate(scaled_slides):
+    for idx, (s_id, coords_list, (orig_w, orig_h), im_scaled) in enumerate(
+        scaled_slides
+    ):
         tx, ty = thumb_positions[idx]
-        for (x, y) in coords_list:
+        for x, y in coords_list:
             if rotate_thumbs:
                 rx, ry = rotate_coord_90_ccw(x, y, orig_w, orig_h)
                 left = tx + rx * s
@@ -249,7 +285,9 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
                 upper = ty + y * s
             right = left + 224 * s
             lower = upper + 224 * s
-            draw_canvas.rectangle([left, upper, right, lower], outline='black', width=line_width)
+            draw_canvas.rectangle(
+                [left, upper, right, lower], outline="black", width=line_width
+            )
 
     # Paste tile grid below thumbnails
     canvas_image.paste(grid_image, (0, final_thumb_height))
@@ -265,10 +303,14 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
     left, right = bar_x, bar_x + scale_bar_pixels_thumb
     upper = max(0, bar_y - sample_height // 2)
     lower = min(canvas_height, bar_y + sample_height // 2)
-    sampling_area = canvas_image.crop((left, upper, right, lower)).convert('L')
+    sampling_area = canvas_image.crop((left, upper, right, lower)).convert("L")
     avg_brightness = np.mean(np.array(sampling_area))
-    bar_color = 'black' if avg_brightness > 128 else 'white'
-    draw_canvas.line([(bar_x, bar_y), (bar_x + scale_bar_pixels_thumb, bar_y)], fill=bar_color, width=5)
+    bar_color = "black" if avg_brightness > 128 else "white"
+    draw_canvas.line(
+        [(bar_x, bar_y), (bar_x + scale_bar_pixels_thumb, bar_y)],
+        fill=bar_color,
+        width=5,
+    )
 
     # Save visualization as JPG
     output_jpg_path = os.path.join(output_dir, f"{patient_id}.jpg")
@@ -277,32 +319,41 @@ def process_patient(patient_id, group, ctp_dir, cache_dir, output_dir, device, m
     # Embed the image in an SVG using base64 encoding
     output_svg_path = os.path.join(output_dir, f"{patient_id}.svg")
     buffer = io.BytesIO()
-    canvas_image.save(buffer, format='PNG')
+    canvas_image.save(buffer, format="PNG")
     png_data = buffer.getvalue()
-    base64_data = base64.b64encode(png_data).decode('utf-8')
+    base64_data = base64.b64encode(png_data).decode("utf-8")
     data_uri = "data:image/png;base64," + base64_data
 
     dwg = svgwrite.Drawing(output_svg_path, size=(canvas_width, canvas_height))
     dwg.add(dwg.image(href=data_uri, insert=(0, 0), size=(canvas_width, canvas_height)))
     dwg.save()
 
-    print(f"Saved visualization for patient {patient_id} at {output_svg_path} and {output_jpg_path}")
+    print(
+        f"Saved visualization for patient {patient_id} at {output_svg_path} and {output_jpg_path}"
+    )
 
-def main(cohorts=None, patient_ids=None, num_patients=None, device='cpu'):
+
+def main(cohorts=None, patient_ids=None, num_patients=None, device="cpu"):
     """Main routine for processing patients and generating visualizations."""
     cache_sup_dir = os.path.join("cache", "images")
     if cohorts is None:
         cohorts = os.listdir(cache_sup_dir)
     for cohort in cohorts:
-        ctp_dir = os.path.join("tile_features", "2mpp", cohort, "ctranspath", "STAMP_raw_xiyuewang-ctranspath-7c998680")
+        ctp_dir = os.path.join(
+            "tile_features",
+            "2mpp",
+            cohort,
+            "ctranspath",
+            "STAMP_raw_xiyuewang-ctranspath-7c998680",
+        )
         cache_dir = os.path.join("cache", "images", cohort)
         output_dir = os.path.join("output", "toptiles", f"{cohort}_A")
         os.makedirs(output_dir, exist_ok=True)
 
         model = load_chief_model(device)
         slide_table = load_slide_table(cohort)
-        slide_table['PATIENT'] = slide_table['PATIENT'].astype(str)
-        patient_groups = slide_table.groupby('PATIENT')
+        slide_table["PATIENT"] = slide_table["PATIENT"].astype(str)
+        patient_groups = slide_table.groupby("PATIENT")
 
         if patient_ids:
             patients_to_process = patient_ids
@@ -313,12 +364,15 @@ def main(cohorts=None, patient_ids=None, num_patients=None, device='cpu'):
             print("Please specify either --patient_id or --num_patients")
             return
 
-        for pid in tqdm(patients_to_process, desc='Patients'):
+        for pid in tqdm(patients_to_process, desc="Patients"):
             if pid not in patient_groups.groups:
                 print(f"Patient {pid} not found in cohort {cohort}")
                 continue
             group = patient_groups.get_group(pid)
-            process_patient(pid, group, ctp_dir, cache_dir, output_dir, device, model, cohort)
+            process_patient(
+                pid, group, ctp_dir, cache_dir, output_dir, device, model, cohort
+            )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(num_patients=5)
