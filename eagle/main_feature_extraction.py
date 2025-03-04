@@ -11,24 +11,19 @@ The script:
 """
 
 import os
-import sys
 import argparse
-import base64
-import io
 import itertools
 import numpy as np
 import pandas as pd
 import h5py
 import torch
-import torch.nn.functional as F
 from tqdm import tqdm
-from pathlib import Path
 from PIL import Image, ImageDraw
-import svgwrite
 import timm
 from timm.layers import SwiGLUPacked
 from timm.data import resolve_data_config
 from timm.data.transforms_factory import create_transform
+from huggingface_hub import login
 from models.CHIEF import CHIEF
 
 # Allow processing of very large images
@@ -56,6 +51,7 @@ def load_virchow2_model(device):
     ckpt_path = os.path.join(ckpt_dir, checkpoint)
     if not os.path.exists(ckpt_path):
         print("Downloading Virchow2 weights...")
+        login()
         os.makedirs(ckpt_dir, exist_ok=True)
         temp_model = timm.create_model("hf-hub:paige-ai/Virchow2", pretrained=True,
                                        mlp_layer=SwiGLUPacked, act_layer=torch.nn.SiLU)
