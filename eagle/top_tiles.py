@@ -1,15 +1,15 @@
 import os
 import argparse
 import random
-import base64
-import io
 import numpy as np
 import pandas as pd
 import h5py
 import torch
 from tqdm import tqdm
 from PIL import Image, ImageDraw
-import svgwrite
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from models.CHIEF import CHIEF
 
 # Allow large image processing
@@ -39,7 +39,7 @@ def parse_args():
 def load_chief_model(device):
     """Load the pretrained CHIEF model."""
     model = CHIEF(size_arg="small", dropout=True, n_classes=2)
-    weight_path = os.path.join("models", "weights", "CHIEF_pretraining.pth")
+    weight_path = os.path.join("model_weights", "CHIEF_pretraining.pth")
     td = torch.load(weight_path, map_location=torch.device(device))
     if "organ_embedding" in td:
         del td["organ_embedding"]
@@ -316,20 +316,8 @@ def process_patient(
     output_jpg_path = os.path.join(output_dir, f"{patient_id}.jpg")
     canvas_image.save(output_jpg_path, quality=95)
 
-    # Embed the image in an SVG using base64 encoding
-    output_svg_path = os.path.join(output_dir, f"{patient_id}.svg")
-    buffer = io.BytesIO()
-    canvas_image.save(buffer, format="PNG")
-    png_data = buffer.getvalue()
-    base64_data = base64.b64encode(png_data).decode("utf-8")
-    data_uri = "data:image/png;base64," + base64_data
-
-    dwg = svgwrite.Drawing(output_svg_path, size=(canvas_width, canvas_height))
-    dwg.add(dwg.image(href=data_uri, insert=(0, 0), size=(canvas_width, canvas_height)))
-    dwg.save()
-
     print(
-        f"Saved visualization for patient {patient_id} at {output_svg_path} and {output_jpg_path}"
+        f"Saved visualization for patient {patient_id} at {output_jpg_path}"
     )
 
 

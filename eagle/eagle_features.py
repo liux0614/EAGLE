@@ -4,6 +4,9 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 import torch.nn.functional as F
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from models.CHIEF import CHIEF
 
 # Use CUDA if available
@@ -11,7 +14,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load CHIEF model and weights from relative paths
 model = CHIEF(size_arg="small", dropout=True, n_classes=2)
-weight_path = os.path.join("models", "weights", "CHIEF_pretraining.pth")
+weight_path = os.path.join("model_weights", "CHIEF_pretraining.pth")
 td = torch.load(weight_path, map_location=device)
 if "organ_embedding" in td:
     del td["organ_embedding"]

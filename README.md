@@ -4,12 +4,55 @@ Efficient Approach for Guided Local Examination in Digital Pathology
 [Preprint](https://arxiv.org/abs/2502.13027) | [Cite](#citation)
 
 ## Abstract
->Artificial intelligence (AI) has transformed digital pathology by enabling biomarker prediction from high-resolution whole slide images (WSIs). However, current methods are computationally inefficient, processing thousands of redundant tiles per WSI and requiring complex aggregator models. We introduce EAGLE (Efficient Approach for Guided Local Examination), a deep learning framework that emulates pathologists by selectively analyzing informative regions. EAGLE incorporates two foundation models: CHIEF for efficient tile selection and Virchow2 for extracting high-quality features. Benchmarking was conducted against leading slide- and tile-level foundation models across 31 tasks from four cancer types, spanning morphology, biomarker prediction and prognosis. EAGLE outperformed state-of-the-art foun-dation models by up to 23% and achieved the highest AUROC overall. It processed a slide in 2.27 seconds, reducing computational time by more than 99% compared to existing models. This efficiency enables real-time workflows, allows pathologists to validate all tiles which are used by the model during analysis, and eliminates dependence on high-performance computing, making AI-powered pathology more accessible. By reliably identifying meaningful regions and minimizing artifacts, EAGLE provides robust and interpretable outputs, supporting rapid slide searches, integration into multi-omics pipelines and emerging clinical foundation models.
+>Artificial intelligence (AI) has transformed digital pathology by enabling biomarker prediction from high-resolution whole slide images (WSIs). However, current methods are computationally inefficient, processing thousands of redundant tiles per WSI and requiring complex aggregator models. We introduce EAGLE (Efficient Approach for Guided Local Examination), a deep learning framework that emulates pathologists by selectively analyzing informative regions. EAGLE incorporates two foundation models: CHIEF for efficient tile selection and Virchow2 for extracting high-quality features. Benchmarking was conducted against leading slide- and tile-level foundation models across 31 tasks from four cancer types, spanning morphology, biomarker prediction and prognosis. EAGLE outperformed state-of-the-art foundation models by up to 23% and achieved the highest AUROC overall. It processed a slide in 2.27 seconds, reducing computational time by more than 99% compared to existing models. This efficiency enables real-time workflows, allows pathologists to validate all tiles which are used by the model during analysis, and eliminates dependence on high-performance computing, making AI-powered pathology more accessible. By reliably identifying meaningful regions and minimizing artifacts, EAGLE provides robust and interpretable outputs, supporting rapid slide searches, integration into multi-omics pipelines and emerging clinical foundation models.
 
 
 <p align="center">
-    <img src="assets/fig1v2hd.png" alt="failed loading the image" width="1100"/>
+    <img src="assets/fig1v2hd.jpg" alt="failed loading the image" width="1100"/>
 </p>
+
+## System Requirements
+
+EAGLE has been tested on the following system:
+
+- **Operating System:** Debian GNU/Linux 12 (Bookworm)
+- **Kernel Version:** 6.1.0-30-amd64
+- **Python Version:** 3.11
+
+### Recommended Hardware
+EAGLE can run on both CPU and GPU.
+
+**Suggested hardware for large cohort analysis:**
+- **CPU:** 8+ cores
+- **RAM:** 64GB
+- **GPU:** 12GB VRAM
+
+For smaller test runs (e.g., using the demo dataset), lower specifications may be sufficient.
+
+> **Note:** The demo was tested on a **MacBook Air (M3, 2024)**.  
+> Full experiments were conducted on the Linux server described above.  
+> Installation via `pip install -r requirements.txt` takes a few minutes, the demo runs in approximately **3 minutes** on a similar device.
+
+## Installation
+
+All dependencies are listed in [requirements.txt](requirements.txt). To install the required packages, run:
+
+```bash
+pip install -r requirements.txt
+```
+
+## EAGLE Demo
+
+A demo dataset is provided, containing 7 slides from TCGA-CRC.
+
+To run the demo:
+
+```bash
+python eagle/main_feature_extraction.py --visualize
+```
+### Expected Output
+- One H5 file per cohort with a 1280-dimensional embedding for each patient (stored under the patient ID).  
+- If `--visualize` is specified, thumbnail images with boxes around the selected tiles are generated.
 
 ## EAGLE Feature Extraction
 
@@ -31,7 +74,7 @@ Before extracting EAGLE slide embeddings, please ensure you have completed the f
 
 3. **CHIEF Model Weights**  
    - Download the CHIEF model weights from the [CHIEF repository](https://github.com/hms-dbmi/CHIEF).  
-   - Save the weights to: `models/weights/CHIEF_pretraining.pth`
+   - Save the weights to: `model_weights/CHIEF_pretraining.pth`
 
 4. **Prepare the Slide Table**  
    Create a CSV slide table mapping tile features to patient IDs (to account for multiple slides per patient). The CSV must contain the following columns:
@@ -41,13 +84,13 @@ Before extracting EAGLE slide embeddings, please ensure you have completed the f
 You can extract the EAGLE slide embeddings using the main extraction script:
 
 ```bash
-python main_feature_extraction.py
+python eagle/main_feature_extraction.py
 ```
 
 or if you want to inspect the selected toptiles:
 
 ```bash
-python main_feature_extraction.py --visualize
+python eagle/main_feature_extraction.py --visualize
 ```
 
 ## Acknowledgements

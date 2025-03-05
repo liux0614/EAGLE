@@ -25,6 +25,11 @@ import timm
 from timm.layers import SwiGLUPacked
 from timm.data import resolve_data_config
 from timm.data.transforms_factory import create_transform
+from huggingface_hub import login
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 from models.CHIEF import CHIEF
 
 # Allow processing of very large images
@@ -36,7 +41,7 @@ def load_chief_model(device):
     """Load the CHIEF model for attention extraction."""
     model = CHIEF(size_arg="small", dropout=True, n_classes=2)
     chief_weights_path = os.path.join(
-        "models", "weights", "CHIEF_pretraining.pth"
+        "model_weights", "CHIEF_pretraining.pth"
     )
     td = torch.load(chief_weights_path, map_location=device)
     if "organ_embedding" in td:
@@ -51,11 +56,12 @@ def load_virchow2_model(device):
     Load (or download if needed) the Virchow2 model and define its transform.
     Virchow2 weights are stored in a local directory.
     """
-    ckpt_dir = os.path.join("models", "weights")
+    ckpt_dir = os.path.join("model_weights")
     checkpoint = "Virchow2_pretraining.pth"
     ckpt_path = os.path.join(ckpt_dir, checkpoint)
     if not os.path.exists(ckpt_path):
         print("Downloading Virchow2 weights...")
+        login()
         os.makedirs(ckpt_dir, exist_ok=True)
         temp_model = timm.create_model(
             "hf-hub:paige-ai/Virchow2",
@@ -370,11 +376,11 @@ def process_patient(
         print(f"Error during transformation for patient {patient_id}: {e}")
         return
     batch = torch.stack(processed_tiles).to(device)
-    with torch.no_grad():
-        if device != "cpu":
-            with torch.cuda.amp.autocast():
-                output = virchow2_model(batch)
-        else:
+    if device.type == "cuda":
+        with torch.inference_mode(), torch.autocast(device_type="cuda", dtype=torch.float16):
+            output = virchow2_model(batch)
+    else:
+        with torch.inference_mode():
             output = virchow2_model(batch)
     class_tokens = output[:, 0]
     eagle_embedding = torch.mean(class_tokens, dim=0)
@@ -475,4 +481,5 @@ if __name__ == "__main__":
         help="Also generate visualization of the selected top tiles.",
     )
     args = parser.parse_args()
+    print(torch.cuda.is_available())
     main(args)
