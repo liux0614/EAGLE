@@ -54,6 +54,9 @@ python eagle/main_feature_extraction.py --visualize
 - One H5 file per cohort with a 1280-dimensional embedding for each patient (stored under the patient ID).  
 - If `--visualize` is specified, thumbnail images with boxes around the selected tiles are generated.
 
+### Data Source & Acknowledgment
+The demo dataset includes slides from **The Cancer Genome Atlas (TCGA)** colorectal cancer (TCGA-CRC) cohort. Raw WSIs can be accessed via the **[TCGA Data Portal](https://portal.gdc.cancer.gov/)**.
+
 ## EAGLE Feature Extraction
 
 Before extracting EAGLE slide embeddings, please ensure you have completed the following steps:
