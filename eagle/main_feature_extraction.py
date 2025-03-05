@@ -481,5 +481,4 @@ if __name__ == "__main__":
         help="Also generate visualization of the selected top tiles.",
     )
     args = parser.parse_args()
-    print(torch.cuda.is_available())
     main(args)
