@@ -24,7 +24,7 @@ EAGLE can run on both CPU and GPU.
 
 **Suggested hardware for large cohort analysis:**
 - **CPU:** 8+ cores
-- **RAM:** 64GB
+- **RAM:** 32GB
 - **GPU:** 12GB VRAM
 
 For smaller test runs (e.g., using the demo dataset), lower specifications may be sufficient.
