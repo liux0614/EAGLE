@@ -29,9 +29,8 @@ EAGLE can run on both CPU and GPU.
 
 For smaller test runs (e.g., using the demo dataset), lower specifications may be sufficient.
 
-> **Note:** The demo was tested on a **MacBook Air (M3, 2024)**.  
-> Full experiments were conducted on the Linux server described above.  
-> Installation via `pip install -r requirements.txt` takes a few minutes, the demo runs in approximately **3 minutes** on a similar device.
+> **Note:** The demo was tested on a **MacBook Air (M3, 2024)**. It runs in approximately **3 minutes** on a similar device, installation takes a few minutes.
+> Full experiments were conducted on the Linux server described above.
 
 ## Installation
 
